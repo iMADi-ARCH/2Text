@@ -1,12 +1,12 @@
 from fastapi import UploadFile
-from parsers import pdf, md, docx, odt, ods, odp, pptx, xlsx, ocr
+from parsers import pdf, md, docx, odt, ods, odp, pptx, xlsx, ocr, txt
 
 
 async def parseFile(file: UploadFile) -> str:
     match file.content_type:
         # Text
         case "text/plain":
-            return await file.read()
+            return await txt(file)
         case "text/markdown":
             return await md(file)
 
@@ -40,5 +40,15 @@ async def parseFile(file: UploadFile) -> str:
         case "image/jpeg":
             return await ocr(file)
 
+        # Fallback
+        case "application/octet-stream":
+            ext = file.filename.split(".")[1].lower()
+            if ext == "odp":
+                return await odp(file)
+            elif ext == "ts":
+                return await txt(file)
+            else:
+                return file.content_type + " NOT SUPPORTED"
+
         case _:
-            return "NOT SUPPORTED"
+            return file.content_type + " NOT SUPPORTED"
